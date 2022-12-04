@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import "./Hangman.css";
+import { randomWord } from "./words"
 import img0 from "./0.jpg";
 import img1 from "./1.jpg";
 import img2 from "./2.jpg";
@@ -17,8 +18,10 @@ class Hangman extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { nWrong: 0, guessed: new Set(), answer: "apple" };
+    this.state = { nWrong: 0, guessed: new Set(), answer: this.getRandomWord() };
     this.handleGuess = this.handleGuess.bind(this);
+    this.getRandomWord = this.getRandomWord.bind(this);
+    this.handleRestart = this.handleRestart.bind(this);
   }
 
   /** guessedWord: show current-state of word:
@@ -46,23 +49,43 @@ class Hangman extends Component {
   generateButtons() {
     return "abcdefghijklmnopqrstuvwxyz".split("").map(ltr => (
       <button
+        key={ltr}
         value={ltr}
         onClick={this.handleGuess}
-        disabled={this.state.guessed.has(ltr)}
+        disabled={this.state.guessed.has(ltr) || this.state.nWrong === this.props.maxWrong}
       >
         {ltr}
       </button>
     ));
   }
 
+  getRandomWord() {
+    const newWord = randomWord()
+    return newWord;
+  }
+
+  handleRestart() {
+    this.setState(st => ({ 
+      nWrong: 0, 
+      guessed: new Set(), 
+      answer: this.getRandomWord() 
+    }));
+  }
+
   /** render: render game */
   render() {
+    let btnClasses = `Hangman-btns ${this.state.nWrong === this.props.maxWrong ? "disappear" : ""}`;
+    let alt = `${this.state.nWrong} wrong guesses`
     return (
       <div className='Hangman'>
         <h1>Hangman</h1>
-        <img src={this.props.images[this.state.nWrong]} />
+        <img src={this.props.images[this.state.nWrong]} alt={alt}/>
+        <p>Number wrong: {this.state.nWrong}</p>
         <p className='Hangman-word'>{this.guessedWord()}</p>
-        <p className='Hangman-btns'>{this.generateButtons()}</p>
+        <p className={this.state.nWrong === this.props.maxWrong ? "Game-over" : ""}>{this.state.nWrong === this.props.maxWrong && "You Lose"}</p>
+        <p>{this.state.nWrong === this.props.maxWrong && `Correct Word is ${this.state.answer}`}</p>
+        <p className={btnClasses}>{this.generateButtons()}</p>
+        <input type="button" value="Restart Game" onClick={this.handleRestart} />
       </div>
     );
   }
